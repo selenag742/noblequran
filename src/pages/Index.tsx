@@ -4,6 +4,7 @@ import { Search, BookOpen, MapPin } from "lucide-react";
 import { fetchSurahList } from "@/lib/api";
 import { SurahSummary } from "@/lib/types";
 import { Input } from "@/components/ui/input";
+import Footer from "@/components/Footer";
 
 const Index = () => {
   const [surahs, setSurahs] = useState<SurahSummary[]>([]);
@@ -126,6 +127,7 @@ const Index = () => {
           </p>
         )}
       </main>
+      <Footer />
     </div>
   );
 };
