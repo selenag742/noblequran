@@ -4,6 +4,7 @@ import { ArrowLeft, Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Repeat
 import { fetchSurah } from "@/lib/api";
 import { SurahDetail } from "@/lib/types";
 import { Slider } from "@/components/ui/slider";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const formatTime = (s: number) => {
   if (!s || !isFinite(s)) return "0:00";
@@ -386,21 +387,29 @@ const SurahReader = () => {
             </div>
 
             {/* Reciter select */}
-            <select
-              value={selectedReciter}
-              onChange={(e) => {
-                setSelectedReciter(e.target.value);
-                setIsPlaying(false);
-                setPlayingVerse(null);
-                setCurrentTime(0);
-                setDuration(0);
-              }}
-              className="text-xs bg-secondary text-secondary-foreground border border-border rounded-md px-2 py-1.5 max-w-[120px] hidden sm:block"
-            >
-              {reciters.map((r) => (
-                <option key={r.id} value={r.id}>{r.name}</option>
-              ))}
-            </select>
+            <div className="hidden sm:block">
+              <Select
+                value={selectedReciter}
+                onValueChange={(value) => {
+                  setSelectedReciter(value);
+                  setIsPlaying(false);
+                  setPlayingVerse(null);
+                  setCurrentTime(0);
+                  setDuration(0);
+                }}
+              >
+                <SelectTrigger className="w-[140px] h-8 text-xs bg-secondary text-secondary-foreground border-border">
+                  <SelectValue placeholder="Select reciter" />
+                </SelectTrigger>
+                <SelectContent className="z-50">
+                  {reciters.map((r) => (
+                    <SelectItem key={r.id} value={r.id} className="text-xs">
+                      {r.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
       </div>
