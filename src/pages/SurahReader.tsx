@@ -1,8 +1,16 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Play, Pause, SkipForward, Volume2 } from "lucide-react";
+import { ArrowLeft, Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Repeat } from "lucide-react";
 import { fetchSurah } from "@/lib/api";
 import { SurahDetail } from "@/lib/types";
+import { Slider } from "@/components/ui/slider";
+
+const formatTime = (s: number) => {
+  if (!s || !isFinite(s)) return "0:00";
+  const m = Math.floor(s / 60);
+  const sec = Math.floor(s % 60);
+  return `${m}:${sec.toString().padStart(2, "0")}`;
+};
 
 const SurahReader = () => {
   const { id } = useParams<{ id: string }>();
@@ -13,8 +21,13 @@ const SurahReader = () => {
   const [loading, setLoading] = useState(true);
   const [playingVerse, setPlayingVerse] = useState<number | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [autoPlay, setAutoPlay] = useState(true);
   const [selectedReciter, setSelectedReciter] = useState("1");
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [volume, setVolume] = useState(1);
+  const [muted, setMuted] = useState(false);
+  const [repeat, setRepeat] = useState(false);
+  const [showTranslations, setShowTranslations] = useState({ english: true, urdu: true });
 
   const audioRef = useRef<HTMLAudioElement>(null);
   const verseRefs = useRef<Map<number, HTMLDivElement>>(new Map());
@@ -24,6 +37,8 @@ const SurahReader = () => {
     setSurah(null);
     setPlayingVerse(null);
     setIsPlaying(false);
+    setCurrentTime(0);
+    setDuration(0);
     fetchSurah(surahNo)
       .then((data) => {
         setSurah(data);
@@ -56,7 +71,7 @@ const SurahReader = () => {
     if (isPlaying) {
       audioRef.current.pause();
       setIsPlaying(false);
-    } else if (playingVerse !== null) {
+    } else if (playingVerse !== null && audioRef.current.src) {
       audioRef.current.play();
       setIsPlaying(true);
     } else {
@@ -65,39 +80,79 @@ const SurahReader = () => {
   }, [isPlaying, playingVerse, playChapterAudio]);
 
   const handleAudioEnded = useCallback(() => {
-    setIsPlaying(false);
-    setPlayingVerse(null);
+    if (repeat && audioRef.current) {
+      audioRef.current.currentTime = 0;
+      audioRef.current.play();
+      setPlayingVerse(0);
+      scrollToVerse(0);
+    } else {
+      setIsPlaying(false);
+      setPlayingVerse(null);
+    }
+  }, [repeat, scrollToVerse]);
+
+  const handleSeek = useCallback((value: number[]) => {
+    if (audioRef.current && isFinite(value[0])) {
+      audioRef.current.currentTime = value[0];
+      setCurrentTime(value[0]);
+    }
   }, []);
 
-  // Simulate verse tracking during audio playback
+  const skipForward = useCallback(() => {
+    if (audioRef.current) {
+      audioRef.current.currentTime = Math.min(audioRef.current.currentTime + 10, duration);
+    }
+  }, [duration]);
+
+  const skipBack = useCallback(() => {
+    if (audioRef.current) {
+      audioRef.current.currentTime = Math.max(audioRef.current.currentTime - 10, 0);
+    }
+  }, []);
+
+  // Time/verse tracking
   useEffect(() => {
-    if (!isPlaying || !surah || playingVerse === null) return;
-    const totalVerses = surah.totalAyah;
     const audio = audioRef.current;
     if (!audio) return;
 
-    const handleTimeUpdate = () => {
-      if (audio.duration && audio.duration > 0) {
+    const onTimeUpdate = () => {
+      setCurrentTime(audio.currentTime);
+      if (surah && audio.duration > 0) {
         const progress = audio.currentTime / audio.duration;
-        const estimatedVerse = Math.min(
-          Math.floor(progress * totalVerses),
-          totalVerses - 1
-        );
-        if (estimatedVerse !== playingVerse) {
-          setPlayingVerse(estimatedVerse);
-          scrollToVerse(estimatedVerse);
-        }
+        const estimated = Math.min(Math.floor(progress * surah.totalAyah), surah.totalAyah - 1);
+        setPlayingVerse((prev) => {
+          if (prev !== estimated) {
+            scrollToVerse(estimated);
+            return estimated;
+          }
+          return prev;
+        });
       }
     };
 
-    audio.addEventListener("timeupdate", handleTimeUpdate);
-    return () => audio.removeEventListener("timeupdate", handleTimeUpdate);
-  }, [isPlaying, surah, playingVerse, scrollToVerse]);
+    const onLoadedMetadata = () => setDuration(audio.duration);
+    const onDurationChange = () => setDuration(audio.duration);
 
-  const reciters = surah ? Object.entries(surah.audio).map(([key, val]) => ({
-    id: key,
-    name: val.reciter,
-  })) : [];
+    audio.addEventListener("timeupdate", onTimeUpdate);
+    audio.addEventListener("loadedmetadata", onLoadedMetadata);
+    audio.addEventListener("durationchange", onDurationChange);
+    return () => {
+      audio.removeEventListener("timeupdate", onTimeUpdate);
+      audio.removeEventListener("loadedmetadata", onLoadedMetadata);
+      audio.removeEventListener("durationchange", onDurationChange);
+    };
+  }, [surah, scrollToVerse]);
+
+  // Volume sync
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = muted ? 0 : volume;
+    }
+  }, [volume, muted]);
+
+  const reciters = surah
+    ? Object.entries(surah.audio).map(([key, val]) => ({ id: key, name: val.reciter }))
+    : [];
 
   if (loading) {
     return (
@@ -116,11 +171,11 @@ const SurahReader = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-28">
+    <div className="min-h-screen bg-background pb-36">
       {/* Header */}
       <header className="bg-primary text-primary-foreground sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center gap-3 mb-3">
+          <div className="flex items-center gap-3">
             <button
               onClick={() => navigate("/")}
               className="p-2 rounded-lg hover:bg-primary-foreground/10 transition-colors"
@@ -129,16 +184,36 @@ const SurahReader = () => {
             </button>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-3">
-                <h1 className="font-display text-xl font-bold truncate">
-                  {surah.surahName}
-                </h1>
-                <span className="font-arabic text-xl opacity-90">
-                  {surah.surahNameArabic}
-                </span>
+                <h1 className="font-display text-xl font-bold truncate">{surah.surahName}</h1>
+                <span className="font-arabic text-xl opacity-90">{surah.surahNameArabic}</span>
               </div>
               <p className="text-primary-foreground/60 text-xs mt-0.5">
                 {surah.surahNameTranslation} · {surah.revelationPlace} · {surah.totalAyah} Ayahs
               </p>
+            </div>
+
+            {/* Translation toggles */}
+            <div className="hidden sm:flex items-center gap-2 text-xs">
+              <button
+                onClick={() => setShowTranslations((p) => ({ ...p, english: !p.english }))}
+                className={`px-2.5 py-1 rounded-full transition-colors ${
+                  showTranslations.english
+                    ? "bg-primary-foreground/20 text-primary-foreground"
+                    : "bg-primary-foreground/5 text-primary-foreground/40"
+                }`}
+              >
+                EN
+              </button>
+              <button
+                onClick={() => setShowTranslations((p) => ({ ...p, urdu: !p.urdu }))}
+                className={`px-2.5 py-1 rounded-full transition-colors ${
+                  showTranslations.urdu
+                    ? "bg-primary-foreground/20 text-primary-foreground"
+                    : "bg-primary-foreground/5 text-primary-foreground/40"
+                }`}
+              >
+                UR
+              </button>
             </div>
           </div>
         </div>
@@ -151,6 +226,30 @@ const SurahReader = () => {
           <p className="text-muted-foreground text-sm mt-2">In the name of Allah, the Most Compassionate, Most Merciful</p>
         </div>
       )}
+
+      {/* Mobile translation toggles */}
+      <div className="sm:hidden flex items-center justify-center gap-2 py-3 text-xs">
+        <button
+          onClick={() => setShowTranslations((p) => ({ ...p, english: !p.english }))}
+          className={`px-3 py-1.5 rounded-full border transition-colors ${
+            showTranslations.english
+              ? "bg-primary text-primary-foreground border-primary"
+              : "bg-card text-muted-foreground border-border"
+          }`}
+        >
+          English
+        </button>
+        <button
+          onClick={() => setShowTranslations((p) => ({ ...p, urdu: !p.urdu }))}
+          className={`px-3 py-1.5 rounded-full border transition-colors ${
+            showTranslations.urdu
+              ? "bg-primary text-primary-foreground border-primary"
+              : "bg-card text-muted-foreground border-border"
+          }`}
+        >
+          اردو
+        </button>
+      </div>
 
       {/* Verses */}
       <main className="container mx-auto px-4 py-4 space-y-3">
@@ -181,70 +280,132 @@ const SurahReader = () => {
             </p>
 
             {/* English */}
-            <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
-              {surah.english[i]}
-            </p>
+            {showTranslations.english && (
+              <p className="text-sm md:text-base text-muted-foreground leading-relaxed mb-3">
+                {surah.english[i]}
+              </p>
+            )}
+
+            {/* Urdu */}
+            {showTranslations.urdu && surah.urdu && surah.urdu[i] && (
+              <p className="font-arabic text-base md:text-lg text-muted-foreground/80 leading-relaxed text-right" dir="rtl">
+                {surah.urdu[i]}
+              </p>
+            )}
           </div>
         ))}
       </main>
 
-      {/* Audio Player Bar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border backdrop-blur-lg bg-opacity-95 z-20 shadow-lg">
-        <div className="container mx-auto px-4 py-3 flex items-center gap-3">
-          <button
-            onClick={togglePlay}
-            className="flex-shrink-0 w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:opacity-90 transition-opacity"
-          >
-            {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 ml-0.5" />}
+      {/* Navigation */}
+      <div className="container mx-auto px-4 py-4 flex justify-between">
+        {surahNo > 1 ? (
+          <button onClick={() => navigate(`/surah/${surahNo - 1}`)} className="text-sm text-primary hover:underline">
+            ← Previous Surah
           </button>
+        ) : <div />}
+        {surahNo < 114 ? (
+          <button onClick={() => navigate(`/surah/${surahNo + 1}`)} className="text-sm text-primary hover:underline">
+            Next Surah →
+          </button>
+        ) : <div />}
+      </div>
 
+      {/* Enhanced Audio Player */}
+      <div className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-xl border-t border-border z-20 shadow-[0_-4px_20px_-4px_rgba(0,0,0,0.1)]">
+        {/* Progress bar */}
+        <div className="container mx-auto px-4 pt-2">
+          <Slider
+            value={[currentTime]}
+            max={duration || 100}
+            step={0.1}
+            onValueChange={handleSeek}
+            className="w-full cursor-pointer"
+          />
+          <div className="flex justify-between text-[10px] text-muted-foreground mt-0.5 px-0.5">
+            <span>{formatTime(currentTime)}</span>
+            <span>{formatTime(duration)}</span>
+          </div>
+        </div>
+
+        {/* Controls */}
+        <div className="container mx-auto px-4 pb-3 flex items-center gap-2 md:gap-4">
+          {/* Play controls */}
+          <div className="flex items-center gap-1">
+            <button onClick={skipBack} className="p-2 text-muted-foreground hover:text-foreground transition-colors" title="Back 10s">
+              <SkipBack className="h-4 w-4" />
+            </button>
+            <button
+              onClick={togglePlay}
+              className="w-11 h-11 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:opacity-90 transition-opacity"
+            >
+              {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 ml-0.5" />}
+            </button>
+            <button onClick={skipForward} className="p-2 text-muted-foreground hover:text-foreground transition-colors" title="Forward 10s">
+              <SkipForward className="h-4 w-4" />
+            </button>
+          </div>
+
+          {/* Info */}
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-foreground truncate">
-              {surah.surahName} - {reciters.find(r => r.id === selectedReciter)?.name}
+              {surah.surahName} — {reciters.find((r) => r.id === selectedReciter)?.name}
             </p>
             <p className="text-xs text-muted-foreground">
               {playingVerse !== null ? `Ayah ${playingVerse + 1} of ${surah.totalAyah}` : "Tap play to listen"}
             </p>
           </div>
 
-          <select
-            value={selectedReciter}
-            onChange={(e) => {
-              setSelectedReciter(e.target.value);
-              setIsPlaying(false);
-              setPlayingVerse(null);
-            }}
-            className="text-xs bg-secondary text-secondary-foreground border border-border rounded-md px-2 py-1.5 max-w-[140px]"
-          >
-            {reciters.map((r) => (
-              <option key={r.id} value={r.id}>{r.name}</option>
-            ))}
-          </select>
+          {/* Secondary controls */}
+          <div className="flex items-center gap-1.5">
+            {/* Repeat */}
+            <button
+              onClick={() => setRepeat((r) => !r)}
+              className={`p-2 rounded-md transition-colors ${
+                repeat ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
+              }`}
+              title="Repeat"
+            >
+              <Repeat className="h-4 w-4" />
+            </button>
+
+            {/* Volume */}
+            <button
+              onClick={() => setMuted((m) => !m)}
+              className="p-2 text-muted-foreground hover:text-foreground transition-colors hidden md:block"
+              title={muted ? "Unmute" : "Mute"}
+            >
+              {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+            </button>
+            <div className="hidden md:block w-20">
+              <Slider
+                value={[muted ? 0 : volume]}
+                max={1}
+                step={0.01}
+                onValueChange={(v) => { setVolume(v[0]); setMuted(false); }}
+              />
+            </div>
+
+            {/* Reciter select */}
+            <select
+              value={selectedReciter}
+              onChange={(e) => {
+                setSelectedReciter(e.target.value);
+                setIsPlaying(false);
+                setPlayingVerse(null);
+                setCurrentTime(0);
+                setDuration(0);
+              }}
+              className="text-xs bg-secondary text-secondary-foreground border border-border rounded-md px-2 py-1.5 max-w-[120px] hidden sm:block"
+            >
+              {reciters.map((r) => (
+                <option key={r.id} value={r.id}>{r.name}</option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 
       <audio ref={audioRef} onEnded={handleAudioEnded} preload="none" />
-
-      {/* Navigation */}
-      <div className="container mx-auto px-4 py-4 flex justify-between mb-20">
-        {surahNo > 1 && (
-          <button
-            onClick={() => navigate(`/surah/${surahNo - 1}`)}
-            className="text-sm text-primary hover:underline"
-          >
-            ← Previous Surah
-          </button>
-        )}
-        <div />
-        {surahNo < 114 && (
-          <button
-            onClick={() => navigate(`/surah/${surahNo + 1}`)}
-            className="text-sm text-primary hover:underline"
-          >
-            Next Surah →
-          </button>
-        )}
-      </div>
     </div>
   );
 };

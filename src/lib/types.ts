@@ -19,4 +19,5 @@ export interface SurahDetail {
   english: string[];
   arabic1: string[];
   arabic2: string[];
+  urdu: string[];
 }
