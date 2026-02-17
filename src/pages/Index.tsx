@@ -31,19 +31,19 @@ const Index = () => {
     <div className="min-h-screen bg-background islamic-pattern">
       {/* Hero Header */}
       <header className="relative overflow-hidden bg-primary text-primary-foreground">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[12rem] font-arabic leading-none select-none">
+        <div className="absolute inset-0 opacity-50">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[8vw] font-arabic leading-none select-none">
             ﷽
           </div>
         </div>
-        <div className="relative container mx-auto px-4 py-12 md:py-20 text-center">
-          <h1 className="font-display text-4xl md:text-5xl font-bold mb-3 tracking-tight">
+        <div className="relative container mx-auto px-4 py-16 md:py-36 text-center">
+          {/* <h1 className="font-display text-4xl md:text-5xl font-bold mb-3 tracking-tight">
             The Noble Quran
           </h1>
           <p className="font-arabic text-2xl md:text-3xl mb-2 opacity-90">القرآن الكريم</p>
           <p className="text-primary-foreground/70 text-sm md:text-base max-w-md mx-auto">
             Read, listen, and reflect upon the words of Allah
-          </p>
+          </p> */}
         </div>
       </header>
 

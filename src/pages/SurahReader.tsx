@@ -353,9 +353,9 @@ const SurahReader = () => {
         </div>
 
         {/* Controls */}
-        <div className="container mx-auto px-4 pb-3 flex items-center gap-2 md:gap-4">
+        <div className="container mx-auto px-4 pb-3 flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
           {/* Play controls */}
-          <div className="flex items-center gap-1">
+          <div className="flex items-center justify-between">
             <button onClick={skipBack} className="p-2 text-muted-foreground hover:text-foreground transition-colors" title="Back 10s">
               <SkipBack className="h-4 w-4" />
             </button>
@@ -370,7 +370,8 @@ const SurahReader = () => {
             </button>
           </div>
 
-          {/* Info */}
+
+            {/* Info */}
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-foreground truncate">
               {surah.surahName} — {reciters.find((r) => r.id === selectedReciter)?.name}
@@ -411,7 +412,7 @@ const SurahReader = () => {
             </div>
 
             {/* Reciter select */}
-            <div className="hidden sm:block">
+            <div className="sm:block">
               <Select
                 value={selectedReciter}
                 onValueChange={(value) => {
@@ -435,6 +436,7 @@ const SurahReader = () => {
               </Select>
             </div>
           </div>
+
         </div>
       </div>
 
