@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Repeat } from "lucide-react";
+import { ArrowLeft, Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Repeat, Download } from "lucide-react";
 import { fetchSurah } from "@/lib/api";
 import { SurahDetail } from "@/lib/types";
 import { Slider } from "@/components/ui/slider";
@@ -193,7 +193,7 @@ const SurahReader = () => {
               </p>
             </div>
 
-            {/* Translation toggles */}
+            {/* Translation toggles & Download */}
             <div className="hidden sm:flex items-center gap-2 text-xs">
               <button
                 onClick={() => setShowTranslations((p) => ({ ...p, english: !p.english }))}
@@ -215,6 +215,18 @@ const SurahReader = () => {
               >
                 UR
               </button>
+              {surah?.audio[selectedReciter] && (
+                <a
+                  href={surah.audio[selectedReciter].url}
+                  download
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-1.5 rounded-full bg-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/30 transition-colors"
+                  title="Download audio"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                </a>
+              )}
             </div>
           </div>
         </div>
@@ -250,6 +262,18 @@ const SurahReader = () => {
         >
           اردو
         </button>
+        {surah?.audio[selectedReciter] && (
+          <a
+            href={surah.audio[selectedReciter].url}
+            download
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-3 py-1.5 rounded-full border border-primary bg-primary/10 text-primary flex items-center gap-1 transition-colors hover:bg-primary/20"
+          >
+            <Download className="h-3 w-3" />
+            Download
+          </a>
+        )}
       </div>
 
       {/* Verses */}
