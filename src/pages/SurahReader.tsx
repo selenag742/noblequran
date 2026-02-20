@@ -314,7 +314,7 @@ const SurahReader = () => {
 
             {/* Urdu */}
             {showTranslations.urdu && surah.urdu && surah.urdu[i] && (
-              <p className="font-arabic text-base md:text-lg text-muted-foreground/80 leading-relaxed text-right" dir="rtl">
+              <p className="font-arabic text-base md:text-lg text-muted-foreground/80 leading-relaxed text-right" dir="rtl" lang="ur">
                 {surah.urdu[i]}
               </p>
             )}
