@@ -278,7 +278,7 @@ const SurahReader = () => {
       </div>
 
       {/* Verses */}
-      <main className="container mx-auto px-4 py-4 space-y-3">
+      <main className="container mx-auto px-4 py-4 space-y-3" role="main" aria-label={`Verses of ${surah.surahName}`}>
         {surah.arabic1.map((arabic, i) => (
           <div
             key={i}
