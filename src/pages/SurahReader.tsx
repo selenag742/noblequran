@@ -44,6 +44,7 @@ const SurahReader = () => {
       .then((data) => {
         setSurah(data);
         localStorage.setItem("lastSurah", String(surahNo));
+        document.title = `${data.surahName} (${data.surahNameArabic}) — The Noble Quran`;
       })
       .catch(console.error)
       .finally(() => setLoading(false));
@@ -277,7 +278,7 @@ const SurahReader = () => {
       </div>
 
       {/* Verses */}
-      <main className="container mx-auto px-4 py-4 space-y-3">
+      <main className="container mx-auto px-4 py-4 space-y-3" role="main" aria-label={`Verses of ${surah.surahName}`}>
         {surah.arabic1.map((arabic, i) => (
           <div
             key={i}
@@ -300,7 +301,7 @@ const SurahReader = () => {
             </div>
 
             {/* Arabic */}
-            <p className="font-arabic text-2xl md:text-3xl leading-loose text-right text-foreground mb-4" dir="rtl">
+            <p className="font-arabic text-2xl md:text-3xl leading-loose text-right text-foreground mb-4" dir="rtl" lang="ar">
               {arabic}
             </p>
 
@@ -313,7 +314,7 @@ const SurahReader = () => {
 
             {/* Urdu */}
             {showTranslations.urdu && surah.urdu && surah.urdu[i] && (
-              <p className="font-arabic text-base md:text-lg text-muted-foreground/80 leading-relaxed text-right" dir="rtl">
+              <p className="font-arabic text-base md:text-lg text-muted-foreground/80 leading-relaxed text-right" dir="rtl" lang="ur">
                 {surah.urdu[i]}
               </p>
             )}
@@ -440,7 +441,7 @@ const SurahReader = () => {
         </div>
       </div>
 
-      <audio ref={audioRef} onEnded={handleAudioEnded} preload="none" />
+      <audio ref={audioRef} onEnded={handleAudioEnded} preload="none" aria-label="Quran recitation audio" />
     </div>
   );
 };

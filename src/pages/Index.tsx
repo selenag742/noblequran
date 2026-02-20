@@ -13,6 +13,10 @@ const Index = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    document.title = "The Noble Quran — Read, Listen & Reflect | القرآن الكريم";
+  }, []);
+
+  useEffect(() => {
     fetchSurahList()
       .then(setSurahs)
       .catch(console.error)
@@ -31,24 +35,24 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background islamic-pattern">
       {/* Hero Header */}
-      <header className="relative overflow-hidden bg-primary text-primary-foreground">
-        <div className="absolute inset-0 opacity-50">
+      <header className="relative overflow-hidden bg-primary text-primary-foreground" role="banner">
+        <div className="absolute inset-0 opacity-50" aria-hidden="true">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[8vw] font-arabic leading-none select-none">
             ﷽
           </div>
         </div>
         <div className="relative container mx-auto px-4 py-16 md:py-36 text-center">
-          {/* <h1 className="font-display text-4xl md:text-5xl font-bold mb-3 tracking-tight">
+          <h1 className="font-display text-4xl md:text-5xl font-bold mb-3 tracking-tight">
             The Noble Quran
           </h1>
-          <p className="font-arabic text-2xl md:text-3xl mb-2 opacity-90">القرآن الكريم</p>
+          <p className="font-arabic text-2xl md:text-3xl mb-2 opacity-90" lang="ar">القرآن الكريم</p>
           <p className="text-primary-foreground/70 text-sm md:text-base max-w-md mx-auto">
-            Read, listen, and reflect upon the words of Allah
-          </p> */}
+            Read, listen, and reflect upon the words of Allah with Arabic text, English &amp; Urdu translations
+          </p>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8" role="main">
         {/* Search Bar */}
         <div className="max-w-xl mx-auto mb-8 relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -105,14 +109,14 @@ const Index = () => {
                       {surah.surahNameArabic}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
                     <span>{surah.surahNameTranslation}</span>
-                    <span>·</span>
+                    <span aria-hidden="true">·</span>
                     <span className="flex items-center gap-0.5">
-                      <MapPin className="h-3 w-3" />
+                      <MapPin className="h-3 w-3" aria-hidden="true" />
                       {surah.revelationPlace}
                     </span>
-                    <span>·</span>
+                    <span aria-hidden="true">·</span>
                     <span>{surah.totalAyah} Ayahs</span>
                   </div>
                 </div>
