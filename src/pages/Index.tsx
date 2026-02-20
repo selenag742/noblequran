@@ -13,6 +13,10 @@ const Index = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    document.title = "The Noble Quran — Read, Listen & Reflect | القرآن الكريم";
+  }, []);
+
+  useEffect(() => {
     fetchSurahList()
       .then(setSurahs)
       .catch(console.error)
