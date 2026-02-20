@@ -441,7 +441,7 @@ const SurahReader = () => {
         </div>
       </div>
 
-      <audio ref={audioRef} onEnded={handleAudioEnded} preload="none" />
+      <audio ref={audioRef} onEnded={handleAudioEnded} preload="none" aria-label="Quran recitation audio" />
     </div>
   );
 };

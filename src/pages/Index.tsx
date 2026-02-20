@@ -109,14 +109,14 @@ const Index = () => {
                       {surah.surahNameArabic}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
                     <span>{surah.surahNameTranslation}</span>
-                    <span>·</span>
+                    <span aria-hidden="true">·</span>
                     <span className="flex items-center gap-0.5">
-                      <MapPin className="h-3 w-3" />
+                      <MapPin className="h-3 w-3" aria-hidden="true" />
                       {surah.revelationPlace}
                     </span>
-                    <span>·</span>
+                    <span aria-hidden="true">·</span>
                     <span>{surah.totalAyah} Ayahs</span>
                   </div>
                 </div>
