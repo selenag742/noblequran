@@ -44,6 +44,7 @@ const SurahReader = () => {
       .then((data) => {
         setSurah(data);
         localStorage.setItem("lastSurah", String(surahNo));
+        document.title = `${data.surahName} (${data.surahNameArabic}) — The Noble Quran`;
       })
       .catch(console.error)
       .finally(() => setLoading(false));
