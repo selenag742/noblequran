@@ -301,7 +301,7 @@ const SurahReader = () => {
             </div>
 
             {/* Arabic */}
-            <p className="font-arabic text-2xl md:text-3xl leading-loose text-right text-foreground mb-4" dir="rtl">
+            <p className="font-arabic text-2xl md:text-3xl leading-loose text-right text-foreground mb-4" dir="rtl" lang="ar">
               {arabic}
             </p>
 
